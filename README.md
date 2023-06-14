@@ -1,4 +1,4 @@
-# Aquisition
+# Acquisition
 
 [![TAM - API](https://img.shields.io/static/v1?label=TAM&message=API&color=b51839)](https://www.triamec.com/en/tam-api.html)
 
@@ -12,7 +12,7 @@ without adjusting configuration values to your hardware environment.
 Please read and follow the recommendations below
 before executing any sample application.
 
-![TAM Aquisition](./doc/Screenshot.png)
+![TAM Acquisition](./doc/Screenshot.png)
 
 ## Hardware Prerequisites
 
@@ -26,13 +26,13 @@ This project is made and built with [Microsoft Visual Studio](https://visualstud
 
 In addition you need [TAM Software](https://www.triamec.com/en/tam-software-support.html) installation.
 
-## Run the *Aquisition* Application
+## Run the *Acquisition* Application
 
-1. Open the `Aquisition.sln`.
-2. Open the `AquisitionForm.cs` (view code)
+1. Open the `Acquisition.sln`.
+2. Open the `AcquisitionForm.cs` (view code)
 3. Set the name of the axis for `AxisName`. Double check it in the register *Axes[].Information.AxisName* using the *TAM System Explorer*.
 4. Set the name of the network interface card for `NicName`. You can find this name using the *TAM System Explorer*. In the example below, `NicName = "Ethernet 2"`.
-![TAM Aquisition](./doc/Screenshot.png)
+![TAM Acquisition](./doc/Screenshot.png)
 5. Set `_moveAxis` to `true` if you want to use the trigger for the aquisition
 6. Select the correct connection to the drive by using comment/uncomment for setting the `access` variable 
 
