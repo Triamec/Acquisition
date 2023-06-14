@@ -39,18 +39,18 @@ namespace Triamec.Tam.Samples {
 		/// <summary>
 		/// The name of the axis this demo works with.
 		/// </summary>
-		const string AxisName = "X";
+		const string AxisName = "T";
 
 		/// <summary>
 		/// The name of the network interface card the drive is connected to. Only relevant when the drive is connected
 		/// via auxiliary Ethernet.
 		/// </summary>
-		const string NicName = "DUT";
+		const string NicName = "Ethernet 2";
 
 		/// <summary>
 		/// Whether to trigger the acquisition by letting the axis move.
 		/// </summary>
-		readonly bool _moveAxis = false;
+		readonly bool _moveAxis = true;
 
 		const double PosMin = -1;
 		const double PosMax = 1;
