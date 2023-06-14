@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- 
+		CAUTION! 
+		Modifying the workspace configuration can cause serious problems using the TAM Software. You should know what you're
+		doing when changing any setting.
+		
+		$Id: default.TAMws 40117 2022-02-25 07:36:53Z chm $
+-->
+
+<configuration>
+  <configSections>
+    <sectionGroup name="userSettings" type="System.Configuration.UserSettingsGroup, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" >
+      <section name="Triamec.Tam.UI.Explorer" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+      <section name="Triamec.Tam" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+      <section name="Triamec.Tam.UI" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+      <section name="Triamec.Tam.Modules" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+      <section name="Triamec.Tam.Simulation" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+    </sectionGroup>
+    <sectionGroup name="applicationSettings" type="System.Configuration.ApplicationSettingsGroup, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" >
+      <section name="Triamec.Tam.UI.Explorer" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+      <section name="Triamec.Tam" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+      <section name="Triamec.TriaLink.Adapter.Pci" type="System.Configuration.ClientSettingsSection, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+    </sectionGroup>
+  </configSections>
+
+  <userSettings>
+    <!-- For descriptions, use File|Preferences in the TAM System Explorer. -->
+
+    <Triamec.Tam.UI.Explorer>
+      <setting name="BootMode" serializeAs="String">
+        <!-- Possible values: Identify, Initialize (default) -->
+        <!-- See also TriaLinkRoleAtStartup -->
+        <value>Initialize</value>
+      </setting>
+      <setting name="IsSimulated" serializeAs="String">
+        <value>False</value>
+      </setting>
+    </Triamec.Tam.UI.Explorer>
+
+    <Triamec.Tam>
+      <setting name="TriaLinkRoleAtStartup" serializeAs="String">
+        <!-- Possible values: 
+							 Unknown:							Reset card, leave at current role.
+							 Master:							Reset card to master role.
+							 Observer:						Reset card to observer role.
+							 Untouched (default):	Don't reset card.
+				-->
+        <value>Untouched</value>
+      </setting>
+      <setting name="AcquireAdapters" serializeAs="String">
+        <!-- Possible values: All (default), AllLocal, TriaLink, TriaLinkAll, TriaLinkUsb, Network, TriaLinkLocal, NoPci, <3d party bus name> -->
+        <value>NoPci</value>
+      </setting>
+      <setting name="TamConfigurationPath" serializeAs="String">
+        <value></value>
+      </setting>
+      <setting name="TriaLinkAsynchronousSerialPortName" serializeAs="String">
+        <!-- Possible values: COM1, COM2, ... -->
+        <value></value>
+      </setting>
+      <setting name="TriaLinkIsochronousSerialPortName" serializeAs="String">
+        <!-- Possible values: COM1, COM2, ... -->
+        <value></value>
+      </setting>
+      <setting name="DisableMachineRelatedAddressing" serializeAs="String">
+        <value>False</value>
+      </setting>
+    </Triamec.Tam>
+
+    <Triamec.Tam.UI>
+      <setting name="ScopeConfigurationPath" serializeAs="String">
+        <value></value>
+      </setting>
+    </Triamec.Tam.UI>
+  </userSettings>
+
+  <applicationSettings>
+
+    <Triamec.Tam.UI.Explorer>
+      <setting name="ResetFaultsOnBoot" serializeAs="String">
+        <!-- Whether to attempt to acknowledge device faults after start up.
+						 This setting is ignored when boot mode is Identify.
+             This setting is ignored in TAM Software > 7.2.0, where the behavior is always to not reset faults.
+          -->
+        <value>False</value>
+      </setting>
+    </Triamec.Tam.UI.Explorer>
+
+    <Triamec.Tam>
+      <setting name="RestartPalSlavesOnBoot" serializeAs="String">
+        <!-- Whether to request all slave devices of a TD-bus system to restart. -->
+        <value>True</value>
+      </setting>
+      <setting name="UserProductTypes" serializeAs="Xml">
+        <!-- A list of user defined product types. 
+					The name uniquely defines this product type and represents products of this type.
+					The value uniquely defines this product type and is reported by the hardware. It is assigned by Triamec Motion.
+					The type is any of the fundamental types defined in the StationType enum: Station, Device, Drive.
+					MBCs is the list of values from the MotorBaseConfiguration enum the device supports.
+				-->
+        <value>
+          <ArrayOfProductType xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+							xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+            <!--<ProductType name="AcmeDrive01" 
+							value="0x0132" type="Drive" description="Acmes's first drive." manufacturer="Acme Drives AG">							
+							<MBCs>
+								<MBC>NoMotorOneAxis</MBC>
+								<MBC>OneBrushDCMotor</MBC>
+								<MBC>OneSynchronousACMotor</MBC>
+								<MBC>OneSynchronousTwoPhaseACMotor</MBC>
+							</MBCs>
+						</ProductType>-->
+          </ArrayOfProductType>
+        </value>
+      </setting>
+    </Triamec.Tam>
+
+    <Triamec.TriaLink.Adapter.Pci>
+      <setting name="IrqDisabled" serializeAs="String">
+        <!-- Whether the interrupt of the Tria-LInk PCI card is utilized. Only set to True if directed accordingly -->
+        <value>False</value>
+      </setting>
+      <setting name="DmaDisabled" serializeAs="String">
+        <!-- Whether the DMA controller of the Tria-LInk PCI card is leveraged. Only set to True if directed accordingly -->
+        <value>False</value>
+      </setting>
+    </Triamec.TriaLink.Adapter.Pci>
+  </applicationSettings>
+</configuration>
