@@ -12,7 +12,7 @@ without adjusting configuration values to your hardware environment.
 Please read and follow the recommendations below
 before executing any sample application.*
 
-![TAM Acquisition](./doc/Aquisition_Movement.png)
+![TAM Acquisition](./doc/Acquisition_Movement.png)
 
 ## Hardware Prerequisites
 
@@ -35,11 +35,11 @@ In addition you need [TAM Software](https://www.triamec.com/en/tam-software-supp
 
 ![TAM Acquisition](./doc/Network_NicName.png)
 
-5. Set `_moveAxis` to `true` if you want to use the trigger for the aquisition
+5. Set `_moveAxis` to `true` if you want to use the trigger for the acquisition
 6. Select the correct connection to the drive by using comment/uncomment for setting the `access` variable 
 
 ## Operate the *Acquisition* Application
 
-- Use the slider **Trigger** to adjust the velocity needed to start the aquisition. If `_moveAxis` is set to `false`, **Trigger** is ignored (continous aquisition)
-- Use the slider **Recording time** to adjust the length of the aquisition
+- Use the slider **Trigger** to adjust the velocity needed to start the acquisition. If `_moveAxis` is set to `false`, **Trigger** is ignored (continous acquisition)
+- Use the slider **Recording time** to adjust the length of the acquisition
 
