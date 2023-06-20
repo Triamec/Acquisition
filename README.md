@@ -2,12 +2,12 @@
 
 [![TAM - API](https://img.shields.io/static/v1?label=TAM&message=API&color=b51839)](https://www.triamec.com/en/tam-api.html)
 
-The acquisition sample is a .NET Windows Forms application demonstrating how to record data from your devices using the Triamec Advanced Motion (TAM Software).
+The acquisition sample is a .NET Windows Forms application demonstrating how to record data from your devices using the Triamec Advanced Motion (TAM) Software.
 
-The servo-drive is either recording continously (if no axis movement is chosen) or on a velocity trigger by an endless forth-and-back move sequence.
+The servo-drive is either recording continuously (if no axis movement is chosen) or on a velocity trigger by an endless forth-and-back move sequence.
 The recorded data is shown in a chart. By default, data is recorded at the highest possible rate.
 
-*Caution: you may harm your hardware when executing sample applications 
+*Caution: you may harm your hardware when executing sample applications
 without adjusting configuration values to your hardware environment.
 Please read and follow the recommendations below
 before executing any sample application.*
@@ -40,6 +40,5 @@ In addition you need [TAM Software](https://www.triamec.com/en/tam-software-supp
 
 ## Operate the *Acquisition* Application
 
-- Use the slider **Trigger** to adjust the velocity needed to start the acquisition. If `_moveAxis` is set to `false`, **Trigger** is ignored (continous acquisition)
+- Use the slider **Trigger** to adjust the velocity needed to start the acquisition. If `_moveAxis` is set to `false`, **Trigger** is ignored (continuous acquisition)
 - Use the slider **Recording time** to adjust the length of the acquisition
-
