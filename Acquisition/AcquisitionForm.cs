@@ -39,7 +39,7 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// The name of the axis this demo works with.
         /// </summary>
-        const string AxisName = "X";
+        const string AxisName = "Xtrans";
 
         /// <summary>
         /// The name of the network interface card the drive is connected to. Only relevant when the drive is connected
@@ -173,8 +173,10 @@ namespace Triamec.Tam.Samples {
                 Console.WriteLine(_positionVariable.StartTime);
 
                 // plot
-                Fill(_chart.Series["Position"], _positionVariable, 1);
-                Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
+                if (!_chart.IsDisposed) {
+                    Fill(_chart.Series["Position"], _positionVariable, 1);
+                    Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
+                }
             }
         }
 
