@@ -13,9 +13,7 @@ namespace Triamec.Tam.Samples {
 		static void Main() {
 			EnableVisualStyles();
 			SetCompatibleTextRenderingDefault(false);
-#pragma warning disable CA2000 // Dispose objects before losing scope: Application.Run disposes form
 			Run(new AcquisitionForm());
-#pragma warning restore CA2000
 		}
 	}
 }
