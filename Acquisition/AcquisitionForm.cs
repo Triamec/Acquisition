@@ -130,8 +130,8 @@ namespace Triamec.Tam.Samples {
         /// <exception cref="TamException">Enabling failed.</exception>
         async Task EnableDriveAsync() {
 
-            // Set the drive operational, i.e. switch the power section on.
-            await _axis.Drive.SwitchOn().WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+            // Reset any axis error.
+            await _axis.Control(AxisControlCommands.ResetError).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
 
             // Enable the axis controller.
             await _axis.Control(AxisControlCommands.Enable).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
@@ -143,9 +143,6 @@ namespace Triamec.Tam.Samples {
 
             // Disable the axis controller.
             await _axis.Control(AxisControlCommands.Disable).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
-
-            // Switch the power section off.
-            await _axis.Drive.SwitchOff().WaitForSuccessAsync(Timeout).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -154,7 +151,7 @@ namespace Triamec.Tam.Samples {
         async Task AcquireAsync() {
 
             // don't plot anymore if the form is already closed
-            while (Visible) {
+            while (!_cts.IsCancellationRequested) {
                 var duration = TimeSpan.FromMilliseconds(_trackBarDuration.Value);
                 try {
                     // Many applications can simply call Acquire, and won't use a trigger.
@@ -173,10 +170,8 @@ namespace Triamec.Tam.Samples {
                 Console.WriteLine(_positionVariable.StartTime);
 
                 // plot
-                if (!_chart.IsDisposed) {
-                    Fill(_chart.Series["Position"], _positionVariable, 1);
-                    Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
-                }
+                Fill(_chart.Series["Position"], _positionVariable, 1);
+                Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
             }
         }
 
@@ -210,7 +205,7 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Does some work with a drive.
         /// </summary>
-        async void DoWork() {
+        async Task DoWork() {
             try {
                 #region Preparation
 
@@ -226,13 +221,15 @@ namespace Triamec.Tam.Samples {
                 RefreshTrigger();
 
                 // Start acquiring in parallel
-                var _ = AcquireAsync();
+                var loggingTask = AcquireAsync();
 
                 #endregion Preparation
 
                 // move forth and back
                 // stop moving when the form is closed
                 await Task.Run(Motion).ConfigureAwait(true);
+
+                await loggingTask.ConfigureAwait(true);
             } catch (TamException ex) {
                 MessageBox.Show(this, ex.FullMessage(), "Failure", 0, MessageBoxIcon.Error);
             } finally {
@@ -252,14 +249,18 @@ namespace Triamec.Tam.Samples {
         /// Repeatedly commands motion.
         /// </summary>
         Task Motion() {
-            while (Visible) {
+            while (!_cts.IsCancellationRequested) {
                 if (_moveAxis) {
 
                     // command moves and wait until the moves are completed
                     // Note that using WaitForSuccessAsync would incur more context switches. This is not ideal for
                     // short moves.
                     _axis.MoveAbsolute(PosMax).WaitForSuccess(Timeout);
+
+                    if (_cts.IsCancellationRequested) break;
+
                     _axis.MoveAbsolute(PosMin).WaitForSuccess(Timeout);
+
                 } else {
                     Thread.Sleep(TimeSpan.FromSeconds(0.1));
                 }
@@ -269,6 +270,9 @@ namespace Triamec.Tam.Samples {
         #endregion Acquisition demo code
 
         #region GUI code
+        readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        Task _motionTask;
+
         void OnTrackBarTriggerLevelScroll(object sender, EventArgs e) => RefreshTrigger();
 
         /// <summary>
@@ -276,7 +280,15 @@ namespace Triamec.Tam.Samples {
         /// </summary>
         protected override void OnShown(EventArgs e) {
             base.OnShown(e);
-            DoWork();
+            _motionTask = DoWork();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e) {
+            base.OnFormClosing(e);
+            _cts.Cancel();
+            while (!_motionTask.Wait(TimeSpan.FromMilliseconds(20))) {
+                Application.DoEvents();
+            }
         }
         #endregion GUI code
     }
