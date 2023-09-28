@@ -190,7 +190,7 @@ namespace Triamec.Tam.Samples {
         /// Recreates the trigger from a new value.
         /// </summary>
         /// <remarks>Must be called on the main thread.</remarks>
-        void RefreshTrigger() =>
+        void RefreshTrigger() {
 
             // Create a hardware trigger on velocity with raising edge on the level dictated by the trigger level
             // track bar.
@@ -198,10 +198,15 @@ namespace Triamec.Tam.Samples {
                                       PublicationCommand.RaisingEdge,
                                       (float)_trackBarTriggerLevel.Value);
 
+            // If the acquisition was waiting for a trigger condition, disable it to start a new try.
+            _acquisition.DisableAsync(null);
+        }
+
         /// <summary>
         /// Does some work with a drive.
         /// </summary>
         async Task DoWork() {
+            Task loggingTask = null;
             try {
                 #region Preparation
 
@@ -217,7 +222,7 @@ namespace Triamec.Tam.Samples {
                 RefreshTrigger();
 
                 // Start acquiring in parallel
-                var loggingTask = AcquireAsync();
+                loggingTask = AcquireAsync();
 
                 #endregion Preparation
 
@@ -225,7 +230,6 @@ namespace Triamec.Tam.Samples {
                 // stop moving when the form is closed
                 await Task.Run(Motion).ConfigureAwait(true);
 
-                await loggingTask.ConfigureAwait(true);
             } catch (TamException ex) {
                 MessageBox.Show(this, ex.FullMessage(), "Failure", 0, MessageBoxIcon.Error);
             } finally {
@@ -236,6 +240,10 @@ namespace Triamec.Tam.Samples {
                 _axis?.Drive.RemoveStateObserver(this);
 
                 _acquisition?.Dispose();
+                if (loggingTask != null) {
+                    await loggingTask.ConfigureAwait(false);
+                }
+
                 _topology.Dispose();
                 #endregion Tear down
             }
