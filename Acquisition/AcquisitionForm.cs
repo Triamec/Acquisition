@@ -138,12 +138,8 @@ namespace Triamec.Tam.Samples {
         }
 
         /// <exception cref="TamException">Disabling failed.</exception>
-        async Task DisableDriveAsync() {
-            if (_axis == null) return;
-
-            // Disable the axis controller.
-            await _axis.Control(AxisControlCommands.Disable).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
-        }
+        Task DisableDriveAsync() =>
+            _axis?.Control(AxisControlCommands.Disable).WaitForSuccessAsync(Timeout) ?? Task.CompletedTask;
 
         /// <summary>
         /// Acquires data repeatedly.
