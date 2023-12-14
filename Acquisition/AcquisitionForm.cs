@@ -83,6 +83,9 @@ namespace Triamec.Tam.Samples {
             //var access = DataLinkLayers.TriaLinkUsb;
 
             ITamNode root;
+
+            // AddLocalSystem also works perfectly for network access. However, it might perform better when we
+            // explicitly specify the network interface card connected to the device.
             if (access == DataLinkLayers.Network) {
                 root = _topology.ScanNetworkInterfaces(NicName)[0];
             } else {
