@@ -26,6 +26,11 @@ This project is made and built with [Microsoft Visual Studio](https://visualstud
 
 In addition you need [TAM Software](https://www.triamec.com/en/tam-software-support.html) installation.
 
+> [!WARNING]
+> When downloading this code as ZIP, you possibly need to unblock the file prior unpacking.
+> ![Unblock dialog](./doc/unblock.png)
+> <br/> Otherwise, Windows Defender might block the built application from running.
+
 ## Run the *Acquisition* Application
 
 1. Open the `Acquisition.sln`.
