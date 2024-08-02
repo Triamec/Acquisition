@@ -1,6 +1,7 @@
 ﻿// Copyright © 2012 Triamec Motion AG
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace Triamec.Tam.Samples {
         TamTopology _topology;
         TamAxis _axis;
         ITamAcquisition _acquisition;
-        ITamVariable<double> _positionVariable, _positionErrorVariable;
+        ITamVariable<double> _positionVariable, _positionErrorVariable, _xVariable, _yVariable;
         ITamTrigger _trigger;
         #endregion Fields
 
@@ -113,16 +114,23 @@ namespace Triamec.Tam.Samples {
             var samplingTime = TimeSpan.Zero;
 
             // Often, 10kHz suffices
-            // var samplingTime = TimeSpan.FromTicks(TimeSpan.TicksPerMillisecond / 10);
+            samplingTime = TimeSpan.FromTicks(TimeSpan.TicksPerMillisecond / 10);
 
             ITamReadonlyRegister posReg = axisRegister.Signals.PositionController.MasterPosition;
-            _positionVariable = posReg.CreateVariable(samplingTime);
             ITamReadonlyRegister errorReg = axisRegister.Signals.PositionController.Controllers[0].PositionError;
+
+            // TODO: Choose two registers to plot one against the other, for example the encoder phases
+            ITamReadonlyRegister xReg = posReg;
+            ITamReadonlyRegister yReg = errorReg;
+
+            _positionVariable = posReg.CreateVariable(samplingTime);
             _positionErrorVariable = errorReg.CreateVariable(samplingTime);
+            _xVariable = xReg.CreateVariable(samplingTime);
+            _yVariable = yReg.CreateVariable(samplingTime);
 
             // As soon as multiple variables are to be recorded synchronized, create an acquisition object.
             // Otherwise, you may use the Acquire methods of the variable itself.
-            _acquisition = TamAcquisition.Create(_positionVariable, _positionErrorVariable);
+            _acquisition = TamAcquisition.Create(_positionVariable, _positionErrorVariable, _xVariable, _yVariable);
 
             // Prepare for the use of the WaitForSuccess method.
             _axis.Drive.AddStateObserver(this);
@@ -171,6 +179,7 @@ namespace Triamec.Tam.Samples {
                 // plot
                 Fill(_chart.Series["Position"], _positionVariable, 1);
                 Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
+                FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
             }
         }
 
@@ -185,6 +194,20 @@ namespace Triamec.Tam.Samples {
             int index = 0;
             foreach (double value in variable) {
                 points.AddXY(xStep * index++, value * scaling);
+            }
+
+            points.ResumeUpdates();
+        }
+
+        /// <summary>
+        /// Plots one data series in polar coordinates.
+        /// </summary>
+        static void FillPolar(Series series, IEnumerable<double> xValues, IEnumerable<double> yValues) {
+            DataPointCollection points = series.Points;
+            points.SuspendUpdates();
+            points.Clear();
+            foreach (var (x, y) in xValues.Zip(yValues, (x, y) => (x, y))) {
+                points.AddXY(x, y);
             }
             points.ResumeUpdates();
         }

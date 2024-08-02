@@ -4,6 +4,11 @@
 
 The acquisition sample is a .NET Windows Forms application demonstrating how to record data from your devices using the Triamec Advanced Motion (TAM) Software.
 
+ > [!NOTE]
+> Modified version with a focus on hands-on experience.
+>
+> Adds an XY-chart which is perfect to plot the encoder phase, but the registers are to be chosen by the students.
+
 The servo-drive is either recording continuously (if no axis movement is chosen) or on a velocity trigger by an endless forth-and-back move sequence.
 The recorded data is shown in a chart. By default, data is recorded at the highest possible rate.
 
