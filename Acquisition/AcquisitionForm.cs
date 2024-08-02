@@ -104,7 +104,7 @@ namespace Triamec.Tam.Samples {
             // Most drives get integrated into a real time control system. Accessing them via TAM API like we do here is considered
             // a secondary use case. Tell the axis that we're going to take control. Otherwise, the axis might reject our commands.
             // You should not do this, though, when this application is about to access the drive via the PCI interface.
-            _axis.ControlSystemTreatment.Override(enabled: false);
+            _axis.ControlSystemTreatment.Override(enabled: _moveAxis);
 
             var axisRegister = (Axis)_axis.Register;
 
