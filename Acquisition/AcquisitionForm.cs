@@ -117,7 +117,11 @@ namespace Triamec.Tam.Samples {
             samplingTime = TimeSpan.FromTicks(TimeSpan.TicksPerMillisecond / 10);
 
             ITamReadonlyRegister posReg = axisRegister.Signals.PositionController.MasterPosition;
-            ITamReadonlyRegister errorReg = axisRegister.Signals.PositionController.Controllers[0].PositionError;
+
+            // Imagine you read a list of registers from a file.
+            // The FindNode takes relative URLs to locate the registers.
+            var errorReg = (ITamReadonlyRegister)axisRegister.FindNode(new Uri(
+                "Signals/PositionController/Controllers[0]/PositionError", UriKind.Relative));
 
             // TODO: Choose two registers to plot one against the other, for example the encoder phases
             ITamReadonlyRegister xReg = posReg;
@@ -130,6 +134,7 @@ namespace Triamec.Tam.Samples {
 
             // As soon as multiple variables are to be recorded synchronized, create an acquisition object.
             // Otherwise, you may use the Acquire methods of the variable itself.
+            // Note that the function takes an array of variables.
             _acquisition = TamAcquisition.Create(_positionVariable, _positionErrorVariable, _xVariable, _yVariable);
 
             // Prepare for the use of the WaitForSuccess method.
