@@ -236,6 +236,8 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Does some work with a drive.
         /// </summary>
+        // What are those async and await keywords?
+        // See https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
         async Task DoWork() {
             Task loggingTask = null;
             try {
