@@ -117,11 +117,17 @@ namespace Triamec.Tam.Samples {
 
             ITamReadonlyRegister posReg = axisRegister.Signals.PositionController.MasterPosition;
             _positionVariable = posReg.CreateVariable(samplingTime);
-            ITamReadonlyRegister errorReg = axisRegister.Signals.PositionController.Controllers[0].PositionError;
+
+            // Imagine you read a list of registers from a file.
+            // The FindNode takes relative URLs to locate the registers.
+            var errorReg = (ITamReadonlyRegister)axisRegister.FindNode(new Uri(
+                "Signals/PositionController/Controllers[0]/PositionError", UriKind.Relative));
+
             _positionErrorVariable = errorReg.CreateVariable(samplingTime);
 
             // As soon as multiple variables are to be recorded synchronized, create an acquisition object.
             // Otherwise, you may use the Acquire methods of the variable itself.
+            // Note that the function takes an array of variables.
             _acquisition = TamAcquisition.Create(_positionVariable, _positionErrorVariable);
 
             // Prepare for the use of the WaitForSuccess method.
