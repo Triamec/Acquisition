@@ -40,7 +40,7 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// The name of the axis this demo works with.
         /// </summary>
-        const string AxisName = "Xtrans";
+        const string AxisName = "Axis 1";
 
         /// <summary>
         /// The name of the network interface card the drive is connected to. Only relevant when the drive is connected
@@ -51,13 +51,13 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Whether to trigger the acquisition by letting the axis move.
         /// </summary>
-        readonly bool _moveAxis = false;
+        readonly bool _moveAxis = true;
 
-        const double PosMin = -1;
-        const double PosMax = 1;
+        const double PosMin = 1;
+        const double PosMax = 2;
 
         /// <summary>
-        /// The maximal duration, in milliseconds, for axis activation and single moves.
+        /// The maximal duration for axis activation and single moves.
         /// </summary>
         static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
@@ -143,20 +143,6 @@ namespace Triamec.Tam.Samples {
             return Task.CompletedTask;
         }
 
-        /// <exception cref="TamException">Enabling failed.</exception>
-        async Task EnableDriveAsync() {
-
-            // Reset any axis error.
-            await _axis.Control(AxisControlCommands.ResetError).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
-
-            // Enable the axis controller.
-            await _axis.Control(AxisControlCommands.Enable).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
-        }
-
-        /// <exception cref="TamException">Disabling failed.</exception>
-        Task DisableDriveAsync() =>
-            _axis?.Control(AxisControlCommands.Disable).WaitForSuccessAsync(Timeout) ?? Task.CompletedTask;
-
         /// <summary>
         /// Acquires data repeatedly.
         /// </summary>
@@ -187,6 +173,20 @@ namespace Triamec.Tam.Samples {
                 FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
             }
         }
+
+        /// <exception cref="TamException">Enabling failed.</exception>
+        async Task EnableDriveAsync() {
+
+            // Reset any axis error.
+            await _axis.Control(AxisControlCommands.ResetError).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+
+            // Enable the axis controller.
+            await _axis.Control(AxisControlCommands.Enable).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+        }
+
+        /// <exception cref="TamException">Disabling failed.</exception>
+        Task DisableDriveAsync() =>
+            _axis?.Control(AxisControlCommands.Disable).WaitForSuccessAsync(Timeout) ?? Task.CompletedTask;
 
         /// <summary>
         /// Plots one data series.
@@ -244,6 +244,7 @@ namespace Triamec.Tam.Samples {
                 #region Preparation
 
                 // create topology, boot system, find axis
+                // Use Task.Run to offload synchronous task to another thread
                 await Task.Run(Startup).ConfigureAwait(true);
 
                 // Make the axis ready for movement
@@ -262,6 +263,7 @@ namespace Triamec.Tam.Samples {
                 // move forth and back
                 // stop moving when the form is closed
                 await Task.Run(Motion).ConfigureAwait(true);
+                await Motion().ConfigureAwait(true);
 
             } catch (TamException ex) {
                 MessageBox.Show(this, ex.FullMessage(), "Failure", 0, MessageBoxIcon.Error);
@@ -285,24 +287,23 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Repeatedly commands motion.
         /// </summary>
-        Task Motion() {
+        async Task Motion() {
             while (!_cts.IsCancellationRequested) {
                 if (_moveAxis) {
 
                     // command moves and wait until the moves are completed
                     // Note that using WaitForSuccessAsync would incur more context switches. This is not ideal for
                     // short moves.
-                    _axis.MoveAbsolute(PosMax).WaitForSuccess(Timeout);
+                    await _axis.MoveAbsolute(PosMax).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
 
                     if (_cts.IsCancellationRequested) break;
 
-                    _axis.MoveAbsolute(PosMin).WaitForSuccess(Timeout);
+                    await _axis.MoveAbsolute(PosMin).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
 
                 } else {
-                    Thread.Sleep(TimeSpan.FromSeconds(0.1));
+                    await Task.Delay(TimeSpan.FromSeconds(0.1)).ConfigureAwait(false);
                 }
             }
-            return Task.CompletedTask;
         }
         #endregion Acquisition demo code
 
