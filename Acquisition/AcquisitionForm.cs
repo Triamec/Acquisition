@@ -41,12 +41,14 @@ namespace Triamec.Tam.Samples {
         /// The name of the axis this demo works with.
         /// </summary>
         const string AxisName = "Axis 1";
+        const bool UseSpecificAxis = false;
 
         /// <summary>
         /// The name of the network interface card the drive is connected to. Only relevant when the drive is connected
         /// via auxiliary Ethernet.
         /// </summary>
         const string NicName = "Ethernet 2";
+        const bool UseSpecificNic = false;
 
         /// <summary>
         /// Whether to trigger the acquisition by letting the axis move.
@@ -71,26 +73,37 @@ namespace Triamec.Tam.Samples {
             // Note that we must dispose this object at the end in order to clean up resources.
             _topology = new TamTopology();
 
-            // Access the drive via Auxiliary Ethernet. Consult application note AN123 for correct setup. In particular,
-            // make sure to take into account the firewall. If you can connect to the drive but not acquire data, this
-            // is likely due to the firewall.
-            var access = DataLinkLayers.Network;
-
-            // Access the drive via PCI card (not recommended when TwinCAT runs on the same system)
-            //var access = DataLinkLayers.TriaLink;
-
-            // Connect the drive with a USB cable to the PC (not recommended with harsh electromagnetic environments)
-            // Also works with a Tria-Link PCI adapter connected via USB to the measuring PC.
-            //var access = DataLinkLayers.TriaLinkUsb;
-
             ITamNode root;
+            DataLinkLayers access;
+            TamSystem system;
+            if (UseSpecificNic) {
+                // Access the drive via Auxiliary Ethernet. Consult application note AN123 for correct setup. In particular,
+                // make sure to take into account the firewall. If you can connect to the drive but not acquire data, this
+                // is likely due to the firewall.
+                access = DataLinkLayers.Network;
 
-            // AddLocalSystem also works perfectly for network access. However, it might perform better when we
-            // explicitly specify the network interface card connected to the device.
-            if (access == DataLinkLayers.Network) {
-                root = _topology.ScanNetworkInterfaces(NicName)[0];
+                // Access the drive via PCI card (not recommended when TwinCAT runs on the same system)
+                //var access = DataLinkLayers.TriaLink;
+
+                // Connect the drive with a USB cable to the PC (not recommended with harsh electromagnetic environments)
+                // Also works with a Tria-Link PCI adapter connected via USB to the measuring PC.
+                //var access = DataLinkLayers.TriaLinkUsb;
+
+
+                // AddLocalSystem also works perfectly for network access. However, it might perform better when we
+                // explicitly specify the network interface card connected to the device.
+                if (access == DataLinkLayers.Network) {
+                    root = _topology.ScanNetworkInterfaces(NicName)[0];
+                } else {
+                    system = _topology.AddLocalSystem(access);
+
+                    // Scan the Tria-Link in order to learn about connected stations.
+                    system.Identify();
+
+                    root = system;
+                }
             } else {
-                var system = _topology.AddLocalSystem(access);
+                system = _topology.AddLocalSystem();
 
                 // Scan the Tria-Link in order to learn about connected stations.
                 system.Identify();
@@ -99,8 +112,12 @@ namespace Triamec.Tam.Samples {
             }
 
             // Get the axis with the predefined name
-            _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault(axis => axis.Name == AxisName);
-            if (_axis == null) throw new TamException($"Axis {AxisName} not found.");
+            if (UseSpecificAxis) {
+                _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault(axis => axis.Name == AxisName);
+                if (_axis == null) throw new TamException($"Axis {AxisName} not found.");
+            } else {
+                _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault();
+            }
 
             // Most drives get integrated into a real time control system. Accessing them via TAM API like we do here is considered
             // a secondary use case. Tell the axis that we're going to take control. Otherwise, the axis might reject our commands.
