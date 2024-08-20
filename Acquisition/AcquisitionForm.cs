@@ -76,6 +76,7 @@ namespace Triamec.Tam.Samples {
             ITamNode root;
             DataLinkLayers access;
             TamSystem system;
+            // TODO: Use specific Nic to find your drive faster
             if (UseSpecificNic) {
                 // Access the drive via Auxiliary Ethernet. Consult application note AN123 for correct setup. In particular,
                 // make sure to take into account the firewall. If you can connect to the drive but not acquire data, this
@@ -112,6 +113,7 @@ namespace Triamec.Tam.Samples {
             }
 
             // Get the axis with the predefined name
+            // TODO: Search specifically for your axis instead of just picking the first one
             if (UseSpecificAxis) {
                 _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault(axis => axis.Name == AxisName);
                 if (_axis == null) throw new TamException($"Axis {AxisName} not found.");
@@ -135,19 +137,20 @@ namespace Triamec.Tam.Samples {
 
             ITamReadonlyRegister posReg = axisRegister.Signals.PositionController.MasterPosition;
 
-            // Imagine you read a list of registers from a file.
-            // The FindNode takes relative URLs to locate the registers.
+            // TODO: Whoops! Seems like the below register does not show the correct position error.
+            // Correct the Uri in order to find the correct position error register.
             var errorReg = (ITamReadonlyRegister)axisRegister.FindNode(new Uri(
-                "Signals/PositionController/Controllers[0]/PositionError", UriKind.Relative));
+                "Signals/General/EtherCAT/TargetPositionError", UriKind.Relative));
 
-            // TODO: Choose two registers to plot one against the other, for example the encoder phases
             ITamReadonlyRegister xReg = posReg;
-            ITamReadonlyRegister yReg = errorReg;
+            // TODO: Choose two registers to plot one against the other, for example the encoder phases
+            ITamReadonlyRegister yReg;
 
             _positionVariable = posReg.CreateVariable(samplingTime);
             _positionErrorVariable = errorReg.CreateVariable(samplingTime);
             _xVariable = xReg.CreateVariable(samplingTime);
-            _yVariable = yReg.CreateVariable(samplingTime);
+            // TODO: Create yVariable with yReg
+            _yVariable = _xVariable;
 
             // As soon as multiple variables are to be recorded synchronized, create an acquisition object.
             // Otherwise, you may use the Acquire methods of the variable itself.
@@ -163,7 +166,7 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Acquires data repeatedly.
         /// </summary>
-        async Task AcquireAsync() {
+        async Task AcquireAndPlotAsync() {
 
             // don't plot anymore if the form is already closed
             while (!_cts.IsCancellationRequested) {
@@ -186,7 +189,7 @@ namespace Triamec.Tam.Samples {
 
                 // plot
                 Fill(_chart.Series["Position"], _positionVariable, 1);
-                Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
+                // TODO: Plot the position error, use a scale of 1E3
                 FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
             }
         }
@@ -250,37 +253,35 @@ namespace Triamec.Tam.Samples {
             _acquisition.DisableAsync(null);
         }
 
+        async Task DoOneTimeSetup() {
+            // create topology, boot system, find axis
+            // Use Task.Run to offload synchronous task to another thread
+            await Task.Run(Startup).ConfigureAwait(true);
+
+            // Make the axis ready for movement
+            if (_moveAxis) {
+                await EnableDriveAsync().ConfigureAwait(true);
+                await _axis.SetPosition(0).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
+            }
+            RefreshTrigger();
+        }
+
         /// <summary>
-        /// Does some work with a drive.
+        /// Executes the setup as well as the continous tasks.
         /// </summary>
         // What are those async and await keywords?
         // See https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
         async Task DoWork() {
             Task loggingTask = null;
             try {
-                #region Preparation
-
-                // create topology, boot system, find axis
-                // Use Task.Run to offload synchronous task to another thread
-                await Task.Run(Startup).ConfigureAwait(true);
-
-                // Make the axis ready for movement
-                if (_moveAxis) {
-                    await EnableDriveAsync().ConfigureAwait(true);
-                    await _axis.SetPosition(0).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
-                }
-
-                RefreshTrigger();
-
+                // Do not start before everything is set up
+                await DoOneTimeSetup().ConfigureAwait(true);
                 // Start acquiring in parallel
-                loggingTask = AcquireAsync();
-
-                #endregion Preparation
-
-                // move forth and back
-                // stop moving when the form is closed
-                await Task.Run(Motion).ConfigureAwait(true);
-                await Motion().ConfigureAwait(true);
+                loggingTask = AcquireAndPlotAsync();
+                // Move forth and back
+                var motionTask = ContinousMotion();
+                // Do not close form before running move is done
+                await motionTask.ConfigureAwait(true);
 
             } catch (TamException ex) {
                 MessageBox.Show(this, ex.FullMessage(), "Failure", 0, MessageBoxIcon.Error);
@@ -304,21 +305,21 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Repeatedly commands motion.
         /// </summary>
-        async Task Motion() {
+        async Task ContinousMotion() {
             while (!_cts.IsCancellationRequested) {
                 if (_moveAxis) {
 
                     // command moves and wait until the moves are completed
                     // Note that using WaitForSuccessAsync would incur more context switches. This is not ideal for
                     // short moves.
-                    await _axis.MoveAbsolute(PosMax).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+                    await _axis.MoveAbsolute(PosMax).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
 
                     if (_cts.IsCancellationRequested) break;
 
-                    await _axis.MoveAbsolute(PosMin).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+                    await _axis.MoveAbsolute(PosMin).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
 
                 } else {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1)).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromSeconds(0.1)).ConfigureAwait(true);
                 }
             }
         }
@@ -326,7 +327,7 @@ namespace Triamec.Tam.Samples {
 
         #region GUI code
         readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        Task _motionTask;
+        Task _workTask;
 
         void OnTrackBarTriggerLevelScroll(object sender, EventArgs e) => RefreshTrigger();
 
@@ -335,13 +336,13 @@ namespace Triamec.Tam.Samples {
         /// </summary>
         protected override void OnShown(EventArgs e) {
             base.OnShown(e);
-            _motionTask = DoWork();
+            _workTask = DoWork();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e) {
             base.OnFormClosing(e);
             _cts.Cancel();
-            while (!_motionTask.Wait(TimeSpan.FromMilliseconds(20))) {
+            while (!_workTask.Wait(TimeSpan.FromMilliseconds(20))) {
                 Application.DoEvents();
             }
         }
