@@ -76,7 +76,7 @@ namespace Triamec.Tam.Samples {
             ITamNode root;
             DataLinkLayers access;
             TamSystem system;
-            // TODO: Use specific Nic to find your drive faster
+            // TODO: [E4.1] Use specific Nic to find your drive faster
             if (UseSpecificNic) {
                 // Access the drive via Auxiliary Ethernet. Consult application note AN123 for correct setup. In particular,
                 // make sure to take into account the firewall. If you can connect to the drive but not acquire data, this
@@ -113,7 +113,7 @@ namespace Triamec.Tam.Samples {
             }
 
             // Get the axis with the predefined name
-            // TODO: Search specifically for your axis instead of just picking the first one
+            // TODO: [E5.1] Search specifically for your axis instead of just picking the first one
             if (UseSpecificAxis) {
                 _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault(axis => axis.Name == AxisName);
                 if (_axis == null) throw new TamException($"Axis {AxisName} not found.");
@@ -137,19 +137,20 @@ namespace Triamec.Tam.Samples {
 
             ITamReadonlyRegister posReg = axisRegister.Signals.PositionController.MasterPosition;
 
-            // TODO: Whoops! Seems like the below register does not show the correct position error.
+            // TODO: [E2.1] Whoops! Seems like the below register does not show the correct position error.
             // Correct the Uri in order to find the correct position error register.
             var errorReg = (ITamReadonlyRegister)axisRegister.FindNode(new Uri(
-                "Signals/General/EtherCAT/TargetPositionError", UriKind.Relative));
+                "Signals/PositionController/Controllers[0]/PositionError", UriKind.Relative));
 
             ITamReadonlyRegister xReg = posReg;
-            // TODO: Choose two registers to plot one against the other, for example the encoder phases
+            // TODO: [E3.1] Choose two registers to plot one against the other, for example the encoder phases
             ITamReadonlyRegister yReg;
 
             _positionVariable = posReg.CreateVariable(samplingTime);
-            _positionErrorVariable = errorReg.CreateVariable(samplingTime);
+            // TODO: [E2.2] CreateVariable from errorReg
+            _positionErrorVariable = _positionVariable;
             _xVariable = xReg.CreateVariable(samplingTime);
-            // TODO: Create yVariable with yReg
+            // TODO: [E3.2] Create yVariable with yReg
             _yVariable = _xVariable;
 
             // As soon as multiple variables are to be recorded synchronized, create an acquisition object.
@@ -189,7 +190,8 @@ namespace Triamec.Tam.Samples {
 
                 // plot
                 Fill(_chart.Series["Position"], _positionVariable, 1);
-                // TODO: Plot the position error, use a scale of 1E3
+                // TODO: [E2.3] Plot the position error, use a scale of 1E3
+                // Fill(_chart ...
                 FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
             }
         }
@@ -279,7 +281,7 @@ namespace Triamec.Tam.Samples {
                 // Start acquiring in parallel
                 loggingTask = AcquireAndPlotAsync();
                 // Move forth and back
-                var motionTask = ContinousMotion();
+                var motionTask = ContinousMotionAsync();
                 // Do not close form before running move is done
                 await motionTask.ConfigureAwait(true);
 
@@ -305,18 +307,20 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Repeatedly commands motion.
         /// </summary>
-        async Task ContinousMotion() {
+        async Task ContinousMotionAsync() {
             while (!_cts.IsCancellationRequested) {
                 if (_moveAxis) {
 
-                    // command moves and wait until the moves are completed
-                    // Note that using WaitForSuccessAsync would incur more context switches. This is not ideal for
-                    // short moves.
-                    await _axis.MoveAbsolute(PosMax).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
+                    // TODO: [E1.1] These synchronous commands are blocking our GUI thread!
+                    // Let's make them asynchronous so we can do other stuff while waiting.
+                    _axis.MoveAbsolute(PosMax).WaitForSuccess(Timeout);
 
                     if (_cts.IsCancellationRequested) break;
 
-                    await _axis.MoveAbsolute(PosMin).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
+                    _axis.MoveAbsolute(PosMin).WaitForSuccess(Timeout);
+                    // TODO: [E1.2] If you made the above moves async, you can remove the pause below.
+                    // If the GUI stays responsive, you fixed the bug :)
+                    await Task.Delay(TimeSpan.FromSeconds(0.001)).ConfigureAwait(true);
 
                 } else {
                     await Task.Delay(TimeSpan.FromSeconds(0.1)).ConfigureAwait(true);
