@@ -139,8 +139,9 @@ namespace Triamec.Tam.Samples {
 
             // TODO: [E2.1] Whoops! Seems like the below register does not show the correct position error.
             // Correct the Uri in order to find the correct position error register.
+            // Hints: Use "/" as separator, not ".". Also, start from the "Axis" and not the most upper "Register" node.
             var errorReg = (ITamReadonlyRegister)axisRegister.FindNode(new Uri(
-                "Signals/PositionController/Controllers[0]/PositionError", UriKind.Relative));
+                "Signals/...?", UriKind.Relative));
 
             ITamReadonlyRegister xReg = posReg;
             // TODO: [E3.1] Choose two registers to plot one against the other, for example the encoder phases
@@ -181,7 +182,6 @@ namespace Triamec.Tam.Samples {
                 } catch (AcquisitionException ex) {
                     MessageBox.Show(ex.Message, "Failure during acquisition", MessageBoxButtons.OK,
                         MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, 0);
-
                     break;
                 }
 
@@ -190,7 +190,7 @@ namespace Triamec.Tam.Samples {
 
                 // plot
                 Fill(_chart.Series["Position"], _positionVariable, 1);
-                // TODO: [E2.3] Plot the position error, use a scale of 1E3
+                // TODO: [E2.3] Plot the position error, label it "Position Error" and use a scale of 1E3
                 // Fill(_chart ...
                 FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
             }
@@ -200,10 +200,12 @@ namespace Triamec.Tam.Samples {
         async Task EnableDriveAsync() {
 
             // Reset any axis error.
-            await _axis.Control(AxisControlCommands.ResetError).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+            await _axis.Control(AxisControlCommands.ResetError).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
 
             // Enable the axis controller.
-            await _axis.Control(AxisControlCommands.Enable).WaitForSuccessAsync(Timeout).ConfigureAwait(false);
+            if (_axis.ReadAxisState() <= AxisState.Disabled) { // Workaround for communication issue
+                await _axis.Control(AxisControlCommands.Enable).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
+            }
         }
 
         /// <exception cref="TamException">Disabling failed.</exception>
@@ -311,16 +313,19 @@ namespace Triamec.Tam.Samples {
             while (!_cts.IsCancellationRequested) {
                 if (_moveAxis) {
 
-                    // TODO: [E1.1] These synchronous commands are blocking our GUI thread!
+                    // TODO: [E1.1] These synchronous MoveAbsolute commands are blocking our GUI thread!
                     // Let's make them asynchronous so we can do other stuff while waiting.
                     _axis.MoveAbsolute(PosMax).WaitForSuccess(Timeout);
 
                     if (_cts.IsCancellationRequested) break;
 
                     _axis.MoveAbsolute(PosMin).WaitForSuccess(Timeout);
+
                     // TODO: [E1.2] If you made the above moves async, you can remove the pause below.
                     // If the GUI stays responsive, you fixed the bug :)
                     await Task.Delay(TimeSpan.FromSeconds(0.001)).ConfigureAwait(true);
+
+
 
                 } else {
                     await Task.Delay(TimeSpan.FromSeconds(0.1)).ConfigureAwait(true);
