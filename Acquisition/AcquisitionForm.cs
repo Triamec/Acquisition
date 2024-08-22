@@ -286,7 +286,7 @@ namespace Triamec.Tam.Samples {
                 loggingTask = AcquireAndPlotAsync();
                 // Move forth and back
                 var motionTask = ContinousMotionAsync();
-                // Do not close form before running move is done
+                // Do not tear down system before running move is done
                 await motionTask.ConfigureAwait(true);
 
             } catch (TamException ex) {
