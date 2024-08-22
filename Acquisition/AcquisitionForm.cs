@@ -76,7 +76,7 @@ namespace Triamec.Tam.Samples {
             ITamNode root;
             DataLinkLayers access;
             TamSystem system;
-            // TODO: [E4.1] Use specific Nic to find your drive faster
+            // TODO: [E4.1] Use specific NIC to find your drive faster
             if (UseSpecificNic) {
                 // Access the drive via Auxiliary Ethernet. Consult application note AN123 for correct setup. In particular,
                 // make sure to take into account the firewall. If you can connect to the drive but not acquire data, this
@@ -271,7 +271,7 @@ namespace Triamec.Tam.Samples {
         }
 
         /// <summary>
-        /// Executes the setup as well as the continous tasks.
+        /// Executes the setup as well as the continuous tasks.
         /// </summary>
         // What are those async and await keywords?
         // See https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
