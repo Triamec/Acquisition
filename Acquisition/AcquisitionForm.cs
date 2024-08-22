@@ -14,6 +14,8 @@ using Triamec.TriaLink;
 using Triamec.TriaLink.Adapter;
 using Axis = Triamec.Tam.Rlid19.Axis;
 
+#pragma warning disable CS0162 // Unreachable code detected. Justification: Contains switches for training purpose.
+
 namespace Triamec.Tam.Samples {
     internal sealed partial class AcquisitionForm : Form {
         #region Fields
