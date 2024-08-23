@@ -40,19 +40,6 @@ namespace Triamec.Tam.Samples {
 
         #region Acquisition demo code
         /// <summary>
-        /// The name of the axis this demo works with.
-        /// </summary>
-        const string AxisName = "Axis 1";
-        const bool UseSpecificAxis = false;
-
-        /// <summary>
-        /// The name of the network interface card the drive is connected to. Only relevant when the drive is connected
-        /// via auxiliary Ethernet.
-        /// </summary>
-        const string NicName = "Ethernet 2";
-        const bool UseSpecificNic = false;
-
-        /// <summary>
         /// Whether to trigger the acquisition by letting the axis move.
         /// </summary>
         readonly bool _moveAxis = true;
@@ -79,7 +66,12 @@ namespace Triamec.Tam.Samples {
             DataLinkLayers access;
             TamSystem system;
             // TODO: [E4.1] Use specific NIC to find your drive faster
+            const bool UseSpecificNic = false;
             if (UseSpecificNic) {
+                
+                // The name of the network interface card the drive is connected to.
+                const string NicName = "Ethernet 2";
+
                 // Access the drive via Auxiliary Ethernet. Consult application note AN123 for correct setup. In particular,
                 // make sure to take into account the firewall. If you can connect to the drive but not acquire data, this
                 // is likely due to the firewall.
@@ -116,7 +108,12 @@ namespace Triamec.Tam.Samples {
 
             // Get the axis with the predefined name
             // TODO: [E5.1] Search specifically for your axis instead of just picking the first one
+            const bool UseSpecificAxis = false;
             if (UseSpecificAxis) {
+                
+                // The name of the axis this demo works with.
+                const string AxisName = "Axis 1";
+                
                 _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault(axis => axis.Name == AxisName);
                 if (_axis == null) throw new TamException($"Axis {AxisName} not found.");
             } else {
