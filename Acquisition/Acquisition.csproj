@@ -80,7 +80,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Triamec.Tam.TriaLink">
-      <Version>7.22.0</Version>
+      <Version>7.22.1</Version>
     </PackageReference>
     <PackageReference Include="Triamec.Tam.UI">
       <Version>8.3.0</Version>
