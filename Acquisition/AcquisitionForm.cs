@@ -22,9 +22,26 @@ namespace Triamec.Tam.Samples {
         TamTopology _topology;
         TamAxis _axis;
         ITamAcquisition _acquisition;
-        ITamVariable<double> _positionVariable, _positionErrorVariable, _xVariable, _yVariable;
+        ITamVariable<double> _positionVariable, _continousPositionVariable, _positionErrorVariable, _xVariable, _yVariable;
         ITamTrigger _trigger;
+        static bool _isMoving;
+        bool _doRecordToFiles = false;
+        static int _currentAqcuisitionSampleNumber = 0;
+        static readonly int _maxNumberOfAcquisitionFiles = 4;
         #endregion Fields
+
+        #region Properties
+        bool DoRecordToFiles {
+            get => _doRecordToFiles;
+            set {
+                _doRecordToFiles = value;
+                _saveToFilesButton.Enabled = !value;
+                if (value) {
+                    _currentAqcuisitionSampleNumber = 0; // Reset index for next round
+                }
+            }
+        }
+        #endregion Properties
 
         #region Constructor
         /// <summary>
@@ -68,7 +85,7 @@ namespace Triamec.Tam.Samples {
             // TODO: [E4.1] Use specific NIC to find your drive faster
             const bool UseSpecificNic = false;
             if (UseSpecificNic) {
-                
+
                 // The name of the network interface card the drive is connected to.
                 const string NicName = "Ethernet 2";
 
@@ -110,7 +127,7 @@ namespace Triamec.Tam.Samples {
             // TODO: [E5.1] Search specifically for your axis instead of just picking the first one
             const bool UseSpecificAxis = false;
             if (UseSpecificAxis) {
-                
+
                 // The name of the axis this demo works with.
                 const string AxisName = "Axis 1";
                 
@@ -147,6 +164,7 @@ namespace Triamec.Tam.Samples {
             ITamReadonlyRegister yReg;
 
             _positionVariable = posReg.CreateVariable(samplingTime);
+            _continousPositionVariable = posReg.CreateVariable(samplingTime);
             // TODO: [E2.2] CreateVariable from errorReg
             _positionErrorVariable = _positionVariable;
             _xVariable = xReg.CreateVariable(samplingTime);
@@ -184,14 +202,26 @@ namespace Triamec.Tam.Samples {
                     break;
                 }
 
-                // use absolute time information if you want
-                Console.WriteLine(_positionVariable.StartTime);
-
                 // plot
                 Fill(_chart.Series["Position"], _positionVariable, 1);
                 // TODO: [E2.3] Plot the position error, label it "Position Error" and use a scale of 1E3
                 // Fill(_chart ...
                 FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
+            }
+        }
+
+        void ContinousAcquisition() {
+            using (var acquisition = TamAcquisition.Create(TimeSpan.FromSeconds(20), _continousPositionVariable)) {
+                int i = 0;
+                while (true) {
+                    if (i > 6) {
+                        i = 0; // Reset index after 6 files
+                    }
+                    acquisition.Acquire(TimeSpan.FromSeconds(10));
+                    var exporter = new CsvExporter();
+                    exporter.ExportTo(new List<IVariable<double>> { _continousPositionVariable }, $"AcquisitionDataContinous_{i}.csv");
+                    i++;
+                }
             }
         }
 
@@ -214,7 +244,7 @@ namespace Triamec.Tam.Samples {
         /// <summary>
         /// Plots one data series.
         /// </summary>
-        static void Fill(Series series, ITamVariable<double> variable, double scaling) {
+        void Fill(Series series, ITamVariable<double> variable, double scaling) {
             DataPointCollection points = series.Points;
             points.SuspendUpdates();
             points.Clear();
@@ -223,7 +253,35 @@ namespace Triamec.Tam.Samples {
             foreach (double value in variable) {
                 points.AddXY(xStep * index++, value * scaling);
             }
+            if (DoRecordToFiles) {
+                if (_currentAqcuisitionSampleNumber < _maxNumberOfAcquisitionFiles) {
+                    foreach (var segment in variable.Segments) {
+                        double[] data = segment.ToArray();
+                        var start = segment.StartTime;
+                        var samplingTime = segment.SamplingTime;
+                        var durationInSeconds = samplingTime.TotalSeconds * data.Length;
+                        var end = start + TimeSpan.FromSeconds(durationInSeconds);
 
+                        // Write segment data to a text file
+                        string fileName = $"AcquisitionData_{_currentAqcuisitionSampleNumber}.txt";
+                        // if the file already exists, delete it's content
+                        if (System.IO.File.Exists(fileName)) {
+                            System.IO.File.WriteAllText(fileName, string.Empty);
+                        }
+                        using (var writer = new System.IO.StreamWriter(fileName, true)) {
+                            writer.WriteLine($"Segment Start: {start}, SamplingTime: {samplingTime}, DataLength: {data.Length}, IsRegular: {variable.IsRegular}");
+                            for (int i = 0; i < data.Length; i++) {
+                                writer.WriteLine($"{data[i]}");
+                            }
+                        }
+                        var exporter = new CsvExporter();
+                        exporter.ExportTo(new List<IVariable<double>> { variable }, $"AcquisitionData_{_currentAqcuisitionSampleNumber}.csv");
+                    }
+                    _currentAqcuisitionSampleNumber++;
+                } else {
+                    DoRecordToFiles = false; // Stop recording after max index reached
+                }
+            }
             points.ResumeUpdates();
         }
 
@@ -276,11 +334,14 @@ namespace Triamec.Tam.Samples {
         // See https://learn.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/task-based-asynchronous-pattern-tap
         async Task DoWork() {
             Task loggingTask = null;
+            //Task continousAcquisitionTask = null;
             try {
                 // Do not start before everything is set up
                 await DoOneTimeSetup().ConfigureAwait(true);
                 // Start acquiring in parallel
                 loggingTask = AcquireAndPlotAsync();
+                // Continous acquisition task
+                _ = Task.Run(() => ContinousAcquisition());
                 // Move forth and back
                 var motionTask = ContinousMotionAsync();
                 // Do not tear down system before running move is done
@@ -314,15 +375,15 @@ namespace Triamec.Tam.Samples {
 
                     // TODO: [E1.1] These synchronous MoveAbsolute commands are blocking our GUI thread!
                     // Let's make them asynchronous so we can do other stuff while waiting.
-                    _axis.MoveAbsolute(PosMax).WaitForSuccess(Timeout);
+                    await _axis.MoveAbsolute(PosMax).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
 
                     if (_cts.IsCancellationRequested) break;
 
-                    _axis.MoveAbsolute(PosMin).WaitForSuccess(Timeout);
+                    await _axis.MoveAbsolute(PosMin).WaitForSuccessAsync(Timeout).ConfigureAwait(true);
 
                     // TODO: [E1.2] If you made the above moves async, you can remove the pause below.
                     // If the GUI stays responsive, you fixed the bug :)
-                    await Task.Delay(TimeSpan.FromSeconds(0.001)).ConfigureAwait(true);
+                    //await Task.Delay(TimeSpan.FromSeconds(0.001)).ConfigureAwait(true);
 
 
 
@@ -336,6 +397,10 @@ namespace Triamec.Tam.Samples {
         #region GUI code
         readonly CancellationTokenSource _cts = new CancellationTokenSource();
         Task _workTask;
+
+        private void OnSaveToFileButtonClick(object sender, EventArgs e) {
+            DoRecordToFiles = true;
+        }
 
         void OnTrackBarTriggerLevelScroll(object sender, EventArgs e) => RefreshTrigger();
 

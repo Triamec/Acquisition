@@ -22,6 +22,7 @@ namespace Triamec.Tam.Samples {
             this._trackBarDuration = new System.Windows.Forms.TrackBar();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this._saveToFilesButton = new System.Windows.Forms.Button();
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this._chart)).BeginInit();
@@ -36,17 +37,19 @@ namespace Triamec.Tam.Samples {
             label1.AutoSize = true;
             label1.Dock = System.Windows.Forms.DockStyle.Left;
             label1.Location = new System.Drawing.Point(0, 0);
+            label1.Margin = new System.Windows.Forms.Padding(7, 0, 7, 0);
             label1.Name = "label1";
-            label1.Size = new System.Drawing.Size(40, 13);
+            label1.Size = new System.Drawing.Size(93, 29);
             label1.TabIndex = 3;
             label1.Text = "Trigger";
             // 
             // label2
             // 
             label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            label2.Location = new System.Drawing.Point(40, 0);
+            label2.Location = new System.Drawing.Point(93, 0);
+            label2.Margin = new System.Windows.Forms.Padding(7, 0, 7, 0);
             label2.Name = "label2";
-            label2.Size = new System.Drawing.Size(60, 33);
+            label2.Size = new System.Drawing.Size(140, 74);
             label2.TabIndex = 4;
             label2.Text = "Recording time";
             // 
@@ -74,7 +77,8 @@ namespace Triamec.Tam.Samples {
             legend1.Title = "Signals";
             legend1.TitleAlignment = System.Drawing.StringAlignment.Near;
             this._chart.Legends.Add(legend1);
-            this._chart.Location = new System.Drawing.Point(100, 0);
+            this._chart.Location = new System.Drawing.Point(233, 0);
+            this._chart.Margin = new System.Windows.Forms.Padding(7);
             this._chart.Name = "_chart";
             series1.BorderWidth = 3;
             series1.ChartArea = "chartAreaTop";
@@ -95,18 +99,19 @@ namespace Triamec.Tam.Samples {
             this._chart.Series.Add(series1);
             this._chart.Series.Add(series2);
             this._chart.Series.Add(series3);
-            this._chart.Size = new System.Drawing.Size(818, 575);
+            this._chart.Size = new System.Drawing.Size(1909, 1283);
             this._chart.TabIndex = 0;
             this._chart.TextAntiAliasingQuality = System.Windows.Forms.DataVisualization.Charting.TextAntiAliasingQuality.SystemDefault;
             // 
             // _trackBarTriggerLevel
             // 
             this._trackBarTriggerLevel.Dock = System.Windows.Forms.DockStyle.Left;
-            this._trackBarTriggerLevel.Location = new System.Drawing.Point(0, 33);
+            this._trackBarTriggerLevel.Location = new System.Drawing.Point(0, 74);
+            this._trackBarTriggerLevel.Margin = new System.Windows.Forms.Padding(7);
             this._trackBarTriggerLevel.Maximum = 100;
             this._trackBarTriggerLevel.Name = "_trackBarTriggerLevel";
             this._trackBarTriggerLevel.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this._trackBarTriggerLevel.Size = new System.Drawing.Size(45, 542);
+            this._trackBarTriggerLevel.Size = new System.Drawing.Size(101, 1209);
             this._trackBarTriggerLevel.TabIndex = 1;
             this._trackBarTriggerLevel.TickStyle = System.Windows.Forms.TickStyle.None;
             this._trackBarTriggerLevel.Value = 1;
@@ -115,12 +120,13 @@ namespace Triamec.Tam.Samples {
             // _trackBarDuration
             // 
             this._trackBarDuration.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._trackBarDuration.Location = new System.Drawing.Point(45, 33);
+            this._trackBarDuration.Location = new System.Drawing.Point(101, 74);
+            this._trackBarDuration.Margin = new System.Windows.Forms.Padding(7);
             this._trackBarDuration.Maximum = 100;
             this._trackBarDuration.Minimum = 1;
             this._trackBarDuration.Name = "_trackBarDuration";
             this._trackBarDuration.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this._trackBarDuration.Size = new System.Drawing.Size(55, 542);
+            this._trackBarDuration.Size = new System.Drawing.Size(132, 1209);
             this._trackBarDuration.TabIndex = 2;
             this._trackBarDuration.TickStyle = System.Windows.Forms.TickStyle.None;
             this._trackBarDuration.Value = 10;
@@ -132,8 +138,9 @@ namespace Triamec.Tam.Samples {
             this.panel1.Controls.Add(this.panel2);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Margin = new System.Windows.Forms.Padding(7);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(100, 575);
+            this.panel1.Size = new System.Drawing.Size(233, 1283);
             this.panel1.TabIndex = 5;
             // 
             // panel2
@@ -142,18 +149,32 @@ namespace Triamec.Tam.Samples {
             this.panel2.Controls.Add(label1);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 0);
+            this.panel2.Margin = new System.Windows.Forms.Padding(7);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(100, 33);
+            this.panel2.Size = new System.Drawing.Size(233, 74);
             this.panel2.TabIndex = 3;
+            // 
+            // _saveToFilesButton
+            // 
+            this._saveToFilesButton.ForeColor = System.Drawing.SystemColors.ControlText;
+            this._saveToFilesButton.Location = new System.Drawing.Point(1800, 248);
+            this._saveToFilesButton.Name = "_saveToFilesButton";
+            this._saveToFilesButton.Size = new System.Drawing.Size(253, 92);
+            this._saveToFilesButton.TabIndex = 6;
+            this._saveToFilesButton.Text = "Save to Files";
+            this._saveToFilesButton.UseVisualStyleBackColor = true;
+            this._saveToFilesButton.Click += new System.EventHandler(this.OnSaveToFileButtonClick);
             // 
             // AcquisitionForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 29F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(918, 575);
+            this.ClientSize = new System.Drawing.Size(2142, 1283);
+            this.Controls.Add(this._saveToFilesButton);
             this.Controls.Add(this._chart);
             this.Controls.Add(this.panel1);
+            this.Margin = new System.Windows.Forms.Padding(7);
             this.Name = "AcquisitionForm";
             this.Text = "Form";
             ((System.ComponentModel.ISupportInitialize)(this._chart)).EndInit();
@@ -173,5 +194,6 @@ namespace Triamec.Tam.Samples {
         private System.Windows.Forms.DataVisualization.Charting.Chart _chart;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button _saveToFilesButton;
     }
 }
