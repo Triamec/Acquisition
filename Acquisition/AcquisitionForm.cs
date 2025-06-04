@@ -82,7 +82,7 @@ namespace Triamec.Tam.Samples {
             ITamNode root;
             DataLinkLayers access;
             TamSystem system;
-            // TODO: [E4.1] Use specific NIC to find your drive faster
+            // TODO: [E5.1] Use specific NIC to find your drive faster
             const bool UseSpecificNic = false;
             if (UseSpecificNic) {
 
@@ -124,13 +124,13 @@ namespace Triamec.Tam.Samples {
             }
 
             // Get the axis with the predefined name
-            // TODO: [E5.1] Search specifically for your axis instead of just picking the first one
+            // TODO: [E6.1] Search specifically for your axis instead of just picking the first one
             const bool UseSpecificAxis = false;
             if (UseSpecificAxis) {
 
                 // The name of the axis this demo works with.
                 const string AxisName = "Axis 1";
-                
+
                 _axis = root.AsDepthFirstLeaves<TamAxis>().FirstOrDefault(axis => axis.Name == AxisName);
                 if (_axis == null) throw new TamException($"Axis {AxisName} not found.");
             } else {
@@ -153,11 +153,8 @@ namespace Triamec.Tam.Samples {
 
             ITamReadonlyRegister posReg = axisRegister.Signals.PositionController.MasterPosition;
 
-            // TODO: [E2.1] Whoops! Seems like the below register does not show the correct position error.
-            // Correct the Uri in order to find the correct position error register.
-            // Hints: Use "/" as separator, not ".". Also, start from the "Axis" and not the most upper "Register" node.
-            var errorReg = (ITamReadonlyRegister)axisRegister.FindNode(new Uri(
-                "Signals/...?", UriKind.Relative));
+            // TODO: [E2.1] Whoops! Seems like the below register does not show the correct position error. Check with the TAM System Explorer and IntelliSense for the correct register to use.
+            // var errorReg = (ITamReadonlyRegister)axisRegister.Signals;
 
             ITamReadonlyRegister xReg = posReg;
             // TODO: [E3.1] Choose two registers to plot one against the other, for example the encoder phases
@@ -204,14 +201,16 @@ namespace Triamec.Tam.Samples {
 
                 // plot
                 Fill(_chart.Series["Position"], _positionVariable, 1);
-                // TODO: [E2.3] Plot the position error, label it "Position Error" and use a scale of 1E3
-                // Fill(_chart ...
+                // TODO: [E2.3] Uncomment the line below to plot the position error once you assigned the correct register to _positionErrorVariable
+                // Fill(_chart.Series["Position Error"], _positionErrorVariable, 1E3);
                 FillPolar(_chart.Series["Phase"], _xVariable, _yVariable);
+                VariableToFile(_positionVariable);
             }
         }
 
         void ContinousAcquisition() {
-            using (var acquisition = TamAcquisition.Create(TimeSpan.FromSeconds(20), _continousPositionVariable)) {
+            // TODO [E4.3] Change the acquisition such that one file is generated every 20s and the acquisition stops after 2min of recording.
+            using (var acquisition = TamAcquisition.Create(TimeSpan.FromSeconds(15), _continousPositionVariable)) {
                 int i = 0;
                 while (true) {
                     if (i > 6) {
@@ -253,36 +252,37 @@ namespace Triamec.Tam.Samples {
             foreach (double value in variable) {
                 points.AddXY(xStep * index++, value * scaling);
             }
+            points.ResumeUpdates();
+        }
+
+        void VariableToFile(ITamVariable<double> variable) {
             if (DoRecordToFiles) {
                 if (_currentAqcuisitionSampleNumber < _maxNumberOfAcquisitionFiles) {
-                    foreach (var segment in variable.Segments) {
-                        double[] data = segment.ToArray();
-                        var start = segment.StartTime;
-                        var samplingTime = segment.SamplingTime;
-                        var durationInSeconds = samplingTime.TotalSeconds * data.Length;
-                        var end = start + TimeSpan.FromSeconds(durationInSeconds);
-
-                        // Write segment data to a text file
-                        string fileName = $"AcquisitionData_{_currentAqcuisitionSampleNumber}.txt";
-                        // if the file already exists, delete it's content
-                        if (System.IO.File.Exists(fileName)) {
-                            System.IO.File.WriteAllText(fileName, string.Empty);
-                        }
-                        using (var writer = new System.IO.StreamWriter(fileName, true)) {
-                            writer.WriteLine($"Segment Start: {start}, SamplingTime: {samplingTime}, DataLength: {data.Length}, IsRegular: {variable.IsRegular}");
-                            for (int i = 0; i < data.Length; i++) {
-                                writer.WriteLine($"{data[i]}");
-                            }
-                        }
-                        var exporter = new CsvExporter();
-                        exporter.ExportTo(new List<IVariable<double>> { variable }, $"AcquisitionData_{_currentAqcuisitionSampleNumber}.csv");
+                    double[] data = variable.ToArray();
+                    var start = variable.StartTime;
+                    var samplingTime = variable.SamplingTime;
+                    // Write data to a text file
+                    string fileName = $"AcquisitionData_{_currentAqcuisitionSampleNumber}.txt";
+                    // if the file already exists, delete it's content
+                    if (System.IO.File.Exists(fileName)) {
+                        System.IO.File.WriteAllText(fileName, string.Empty);
                     }
+                    using (var writer = new System.IO.StreamWriter(fileName, true)) {
+                        // TODO: [E4.1] Add a header to the file with the variable name and the number of samples in the file
+                        writer.WriteLine($"Start: {start}, SamplingTime: {samplingTime}");
+                        foreach (var value in data) {
+                            writer.WriteLine(value);
+                        }
+                    }
+                    // Use the TriaLink CSV exporter, this file can be directly imported into the Scope of the TAM System Explorer.
+                    var exporter = new CsvExporter();
+                    // TODO: [E4.2] Add the position error to the export
+                    exporter.ExportTo(new List<IVariable<double>> { variable }, $"AcquisitionData_{_currentAqcuisitionSampleNumber}.csv");
                     _currentAqcuisitionSampleNumber++;
                 } else {
                     DoRecordToFiles = false; // Stop recording after max index reached
                 }
             }
-            points.ResumeUpdates();
         }
 
         /// <summary>
