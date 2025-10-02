@@ -209,7 +209,7 @@ namespace Triamec.Tam.Samples {
         }
 
         void ContinousAcquisition() {
-            // TODO [E4.3] Change the acquisition such that one file is generated every 20s and the acquisition stops after 2min of recording.
+            // TODO: [E4.3] Change the acquisition such that one file is generated every 20s and the acquisition stops after 2min of recording.
             using (var acquisition = TamAcquisition.Create(TimeSpan.FromSeconds(15), _continousPositionVariable)) {
                 int i = 0;
                 while (true) {
