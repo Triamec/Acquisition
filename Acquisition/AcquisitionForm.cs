@@ -303,6 +303,9 @@ namespace Triamec.Tam.Samples {
         /// </summary>
         /// <remarks>Must be called on the main thread.</remarks>
         void RefreshTrigger() {
+            if (_axis == null) {
+                return;
+            }
 
             // Create a hardware trigger on velocity with raising edge on the level dictated by the trigger level
             // track bar.
